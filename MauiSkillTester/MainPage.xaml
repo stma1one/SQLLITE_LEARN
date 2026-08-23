@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiSkillTester.ViewModels"
+             xmlns:models="clr-namespace:MauiSkillTester.Models"
+             x:Class="MauiSkillTester.MainPage"
+             x:DataType="vm:MainViewModel"
+             Title="{Binding Title}"
+             FlowDirection="RightToLeft">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- מחוון טעינה (ActivityIndicator) -->
+        <ActivityIndicator Grid.Row="0"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           Color="{StaticResource Primary}"
+                           HeightRequest="40"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="20">
+
+                <!-- כותרת ראשית ומעוצבת -->
+                <Border StrokeShape="RoundRectangle 12" BackgroundColor="#1E88E5" Padding="16" StrokeThickness="0">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="🎬 מרכז למידה ומעקב YouTube"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Start" />
+                        <Label Text="אפליקציית הדגמה ל-.NET MAUI עם SQLite, MVVM וחיבור אסינכרוני"
+                               FontSize="14"
+                               TextColor="#E3F2FD"
+                               HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+                </Border>
+
+
+                <!-- חלק 1: ניהול ובחירת פלייליסט -->
+                <Border StrokeShape="RoundRectangle 10" Padding="16" BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#212121}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="📁 בחירת פלייליסט" FontSize="18" FontAttributes="Bold" />
+
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <Picker Grid.Column="0"
+                                    Title="בחר פלייליסט מהרשימה..."
+                                    ItemsSource="{Binding Playlists}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    SelectedItem="{Binding SelectedPlaylist}" />
+
+                            <Button Grid.Column="1"
+                                    Text="🗑️ מחק פלייליסט"
+                                    Command="{Binding DeletePlaylistCommand}"
+                                    CommandParameter="{Binding SelectedPlaylist}"
+                                    BackgroundColor="#D32F2F"
+                                    TextColor="White" />
+                        </Grid>
+
+                        <!-- טופס יצירת פלייליסט חדש -->
+                        <BoxView HeightRequest="1" Color="#CCCCCC" Margin="0,4" />
+                        <Label Text="➕ יצירת פלייליסט חדש" FontSize="15" FontAttributes="Bold" />
+                        
+                        <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="8" ColumnSpacing="10">
+                            <Entry Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Placeholder="שם הפלייליסט החדש (חובה)"
+                                   Text="{Binding NewPlaylistName}" />
+
+                            <Entry Grid.Row="1" Grid.Column="0"
+                                   Placeholder="תיאור הפלייליסט (אופציונלי)"
+                                   Text="{Binding NewPlaylistDescription}" />
+
+                            <Button Grid.Row="1" Grid.Column="1"
+                                    Text="צור פלייליסט"
+                                    Command="{Binding AddPlaylistCommand}"
+                                    BackgroundColor="#2E7D32"
+                                    TextColor="White" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- חלק 2: סיכום סטטיסטי של הפלייליסט (SQLite Aggregations) -->
+                <Border StrokeShape="RoundRectangle 10"
+                        Padding="14"
+                        BackgroundColor="{AppThemeBinding Light=#EDE7F6, Dark=#311B92}"
+                        IsVisible="{Binding HasStats}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="📊 סיכום סטטיסטי (SQLite Aggregations)"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#4A148C, Dark=#E1BEE7}" />
+
+                        <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
+                            <!-- סה"כ סרטונים -->
+                            <Border StrokeShape="RoundRectangle 8" BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}" Padding="8">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                                    <Label Text="🎬 סה&quot;כ" FontSize="11" TextColor="Gray" HorizontalOptions="Center" />
+                                    <Label Text="{Binding CurrentPlaylistStats.TotalVideos}" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- סרטונים שנצפו ואחוז -->
+                            <Border StrokeShape="RoundRectangle 8" BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}" Padding="8">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                                    <Label Text="✅ נצפו" FontSize="11" TextColor="Gray" HorizontalOptions="Center" />
+                                    <Label Text="{Binding CurrentPlaylistStats.WatchedVideos, StringFormat='{0} סרטונים'}" FontSize="13" FontAttributes="Bold" HorizontalOptions="Center" />
+                                    <Label Text="{Binding CurrentPlaylistStats.CompletionPercentage, StringFormat='({0}%)'}" FontSize="11" TextColor="#2E7D32" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- סך דקות צפייה -->
+                            <Border StrokeShape="RoundRectangle 8" BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}" Padding="8">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                                    <Label Text="⏱️ סה&quot;כ זמן" FontSize="11" TextColor="Gray" HorizontalOptions="Center" />
+                                    <Label Text="{Binding CurrentPlaylistStats.FormattedTotalDuration}" FontSize="13" FontAttributes="Bold" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- חלק 2: טופס הוספת סרטון לפלייליסט הנבחר -->
+                <Border StrokeShape="RoundRectangle 10"
+                        Padding="16"
+                        BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#1E1E1E}"
+                        IsVisible="{Binding HasSelectedPlaylist}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="➕ הוספת סרטון לפלייליסט הנוכחי" FontSize="18" FontAttributes="Bold" />
+
+                        <Entry Placeholder="כותרת הסרטון (חובה)" Text="{Binding NewVideoTitle}" />
+                        <Entry Placeholder="קישור URL לסרטון ב-YouTube (חובה)" Text="{Binding NewVideoUrl}" Keyboard="Url" />
+                        
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                            <Entry Grid.Column="0" Placeholder="שם הערוץ" Text="{Binding NewVideoChannel}" />
+                            <Entry Grid.Column="1" Placeholder="משך בדקות" Text="{Binding NewVideoDuration}" Keyboard="Numeric" />
+                        </Grid>
+
+                        <Entry Placeholder="הערות אישיות על הסרטון" Text="{Binding NewVideoNotes}" />
+
+                        <Button Text="הוסף סרטון לפלייליסט"
+                                Command="{Binding AddVideoCommand}"
+                                BackgroundColor="#1976D2"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- חלק 3: סרגל חיפוש, סינון ומיון ב-SQL -->
+                <Border StrokeShape="RoundRectangle 10"
+                        Padding="14"
+                        BackgroundColor="{AppThemeBinding Light=#ECEFF1, Dark=#263238}"
+                        IsVisible="{Binding HasSelectedPlaylist}">
+                    <VerticalStackLayout Spacing="10">
+                        <Entry Placeholder="🔍 חפש לפי כותרת, ערוץ או הערות..."
+                               Text="{Binding SearchQuery}" />
+
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" VerticalOptions="Center">
+                            <!-- בורר אפשרויות מיון -->
+                            <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                                <Label Text="מיון:" VerticalOptions="Center" FontSize="13" TextColor="Gray" />
+                                <Picker Title="בחר מיון..."
+                                        ItemsSource="{Binding AvailableSortOptions}"
+                                        ItemDisplayBinding="{Binding DisplayName}"
+                                        SelectedItem="{Binding SelectedSortOptionItem}"
+                                        FontSize="13"
+                                        HorizontalOptions="Fill" />
+                            </HorizontalStackLayout>
+
+                            <!-- סינון רק שלא נצפו -->
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                <CheckBox IsChecked="{Binding ShowOnlyUnwatched}" VerticalOptions="Center" />
+                                <Label Text="רק שלא נצפו" VerticalOptions="Center" FontSize="13" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- חלק 4: רשימת סרטונים (CollectionView) -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasSelectedPlaylist}">
+                    <Label Text="🎥 סרטונים בפלייליסט" FontSize="18" FontAttributes="Bold" />
+
+                    <CollectionView ItemsSource="{Binding Videos}" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="30" HorizontalOptions="Center" Spacing="10">
+                                <Label Text="📭 אין סרטונים להצגה בפלייליסט זה"
+                                       FontSize="16"
+                                       HorizontalOptions="Center"
+                                       TextColor="Gray" />
+                                <Label Text="השתמש בטופס למעלה כדי להוסיף סרטונים חדשים!"
+                                       FontSize="13"
+                                       HorizontalOptions="Center"
+                                       TextColor="Gray" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:VideoItem">
+                                <Border StrokeShape="RoundRectangle 8"
+                                        Margin="0,0,0,10"
+                                        Padding="14"
+                                        BackgroundColor="{AppThemeBinding Light=White, Dark=#2D2D2D}"
+                                        StrokeThickness="1"
+                                        Stroke="#E0E0E0">
+                                    <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
+
+                                        <!-- כותרת וזמן -->
+                                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="2">
+                                            <Label Text="{Binding Title}"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   LineBreakMode="TailTruncation" />
+                                            <HorizontalStackLayout Spacing="12">
+                                                <Label Text="{Binding ChannelName, StringFormat='📺 ערוץ: {0}'}" FontSize="13" TextColor="Gray" />
+                                                <Label Text="{Binding FormattedDuration, StringFormat='⏱️ {0}'}" FontSize="13" TextColor="Gray" />
+                                            </HorizontalStackLayout>
+                                        </VerticalStackLayout>
+
+                                        <!-- כפתור מצב צפייה עם DataTrigger -->
+                                        <Button Grid.Row="0" Grid.Column="1"
+                                                Text="טרם נצפה 👁️"
+                                                Command="{Binding BindingContext.ToggleWatchedCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                CommandParameter="{Binding .}"
+                                                FontSize="12"
+                                                HeightRequest="36"
+                                                Padding="8,2"
+                                                BackgroundColor="#FFF3E0"
+                                                TextColor="#E65100">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding IsWatched}" Value="True">
+                                                    <Setter Property="Text" Value="נצפה ✅" />
+                                                    <Setter Property="BackgroundColor" Value="#E8F5E9" />
+                                                    <Setter Property="TextColor" Value="#2E7D32" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+
+                                        <!-- הערות -->
+                                        <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                               Text="{Binding Notes, StringFormat='📝 הערות: {0}'}"
+                                               FontSize="13"
+                                               FontAttributes="Italic"
+                                               TextColor="#555555" />
+
+                                        <!-- כפתורי פעולה: נגן ב-YouTube ומחק -->
+                                        <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="10" Margin="0,6,0,0">
+                                            <Button Text="▶️ צפה ב-YouTube (Launcher)"
+                                                    Command="{Binding BindingContext.OpenVideoUrlCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="#FF0000"
+                                                    TextColor="White"
+                                                    FontSize="13"
+                                                    HeightRequest="36"
+                                                    Padding="12,0" />
+
+                                            <Button Text="🗑️ מחק סרטון"
+                                                    Command="{Binding BindingContext.DeleteVideoCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="#B00020"
+                                                    TextColor="White"
+                                                    FontSize="13"
+                                                    HeightRequest="36"
+                                                    Padding="12,0" />
+                                        </HorizontalStackLayout>
+
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

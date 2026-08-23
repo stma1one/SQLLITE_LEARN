@@ -1,0 +1,7 @@
+{
+  "studentCapabilityMode": true,
+  "description": {
+    "true": "MAXIMIZE STUDENT CAPABILITY: staged planning, concept gates, ownership negotiation, student practice, and verification.",
+    "false": "MAXIMIZE CODE GENERATED: implement complete feature slices efficiently while preserving verification and learning documentation when configured."
+  }
+}

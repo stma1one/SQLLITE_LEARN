@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MauiSkillTester.Tests/MauiSkillTester.Tests.csproj" />
+  <Project Path="MauiSkillTester/MauiSkillTester.csproj" />
+</Solution>
