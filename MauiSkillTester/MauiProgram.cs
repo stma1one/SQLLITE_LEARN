@@ -27,7 +27,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<MainPage>();
 
         // אתחול ספקי SQLite הנייטיביים עבור כל הפלטפורמות
-        Batteries_V2.Init();
+      //  Batteries_V2.Init();
 
         return builder.Build();
     }
