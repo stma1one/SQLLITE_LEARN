@@ -141,9 +141,17 @@ For each meaningful code change, document:
 - what the agent changed
 - why the architecture was chosen
 - how to verify
-- 1-3 short check questions for substantial concepts
+- Do not write generic textbook lessons. Teach the actual change.
 
-Do not write generic textbook lessons. Teach the actual change.
+### Step-by-Step UI Guides (Leomaris Reyes Block Strategy)
+
+When documenting a screen, page, or UI feature, use the `maui-step-guide-author` methodology:
+- Follow the 6-part structure: Hook & Design Goal -> Meta-Frame -> Namespaces -> Block Strategy (Visual mockups, Grid backbone, individual blocks) -> Deep-Dive Callouts -> MVVM Wiring.
+- Do not dump monolithic XAML files. Provide modular snippets with placeholders (`<!-- Next block goes here -->`).
+- Create an HTML mobile mockup at `Learning/Mockups/<ScreenName>.html` and capture `Learning/Images/<ScreenName>-overview.png`.
+- Highlight visual patterns: negative margins for floating cards, gradient brushes, rounded borders, shadows, and accessible layouts.
+- Keep explanations in Hebrew; keep XAML elements, C# identifiers, and commands in English.
+- Save each screen guide at `Learning/Guides/<ScreenName>-Guide.md` and link it in `Learning/MAUI-Learning-Book.md`.
 
 ## Student Review Tone
 

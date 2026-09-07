@@ -554,11 +554,80 @@ public string WatchedStatusText => IsWatched ? "נצפה ✓" : "טרם נצפה
 ```
 באמצעות `[Ignore]`, מנוע ה-SQLite מתעלם לחלוטין מתכונות אלו בעת יצירת הטבלה או שמירת רשומות.
 
-## 6. תצוגת דשבורד סטטיסטי ב-XAML
-ב-`MainPage.xaml`, הוספנו סרגל כרטיסי מידע המוצג רק כשיש סרטונים (`IsVisible="{Binding HasStats}"`):
-- כרטיס סה"כ סרטונים
-- כרטיס סרטונים שנצפו ואחוז השלמה
-- כרטיס סך כל זמן הצפייה המצטבר
+## 6. תצוגת דשבורד סטטיסטי ב-XAML (חיבור ה-DTO לממשק)
+
+ב-`MainPage.xaml`, הוספנו סרגל כרטיסי מידע מודרני המוצג רק כאשר נבחר פלייליסט עם נתונים (`IsVisible="{Binding HasStats}"`).
+הממשק משתמש ב-`Border` עם פינות מעוגלות (`RoundRectangle 8`), התאמה אוטומטית למצב כהה ובהיר (`AppThemeBinding`), וחלוקה לשלוש עמודות שוות:
+
+![כרטיסי סיכום סטטיסטי](Images/MainPage-block2-stats.png)
+
+```xml
+<Border StrokeShape="RoundRectangle 10"
+        Padding="14"
+        BackgroundColor="{AppThemeBinding Light=#EDE7F6, Dark=#311B92}"
+        IsVisible="{Binding HasStats}">
+    <VerticalStackLayout Spacing="8">
+        <Label Text="📊 סיכום סטטיסטי (SQLite Aggregations)"
+               FontSize="15"
+               FontAttributes="Bold"
+               TextColor="{AppThemeBinding Light=#4A148C, Dark=#E1BEE7}" />
+
+        <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
+            <!-- כרטיס 1: סה"כ סרטונים -->
+            <Border StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}"
+                    Padding="8">
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                    <Label Text="🎬 סה&quot;כ"
+                           FontSize="11"
+                           TextColor="Gray"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding CurrentPlaylistStats.TotalVideos}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- כרטיס 2: סרטונים שנצפו ואחוז השלמה -->
+            <Border StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}"
+                    Padding="8">
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                    <Label Text="✅ נצפו"
+                           FontSize="11"
+                           TextColor="Gray"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding CurrentPlaylistStats.WatchedVideos, StringFormat='{0} סרטונים'}"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding CurrentPlaylistStats.CompletionPercentage, StringFormat='({0}%)'}"
+                           FontSize="11"
+                           TextColor="#2E7D32"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- כרטיס 3: סך דקות צפייה -->
+            <Border StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#4527A0}"
+                    Padding="8">
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                    <Label Text="⏱️ סה&quot;כ זמן"
+                           FontSize="11"
+                           TextColor="Gray"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding CurrentPlaylistStats.FormattedTotalDuration}"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </VerticalStackLayout>
+</Border>
+```
 
 ## 7. אימות מלא בבדיקות יחידה (xUnit)
 כתבנו בדיקות יחידה ייעודיות ב-`DatabaseServiceTests.cs` וב-`MainViewModelTests.cs` שמאמתות:
@@ -566,10 +635,24 @@ public string WatchedStatusText => IsWatched ? "נצפה ✓" : "טרם נצפה
 2. טיפול תקין בפלייליסט ריק (החזרת 0 ואחוז 0 ללא שגיאות).
 3. כל 15 בדיקות היחידה עוברות בהצלחה מלאה (100% PASS)!
 
-## 8. שאלות חזרה ובקרה
-1. מה ההבדל בין שימוש ב-`QueryAsync<T>` לבין `ExecuteScalarAsync<T>`?
-2. מדוע חשוב להשתמש בפונקציה `COALESCE` כאשר מבצעים `SUM` על טבלה שעלולה להיות ריקה?
-3. מה היה קורה אם היינו מוסיפים תכונה כמו `public string FormattedDuration => ...` ל-`VideoItem.cs` ללא האנוטציה `[Ignore]`?
+## 8. שאלות חזרה, הבנה ואתגר חשיבה
+
+### ⚖️ דילמת תכנון: מתי לבצע אגרגציות ב-SQL ומתי ב-C#?
+נניח שבאפליקציה יש 1,000 סרטונים.
+- **דרך א':** לשלוף את כולם לזיכרון ה-RAM ב-C# ולחשב `Videos.Count()`.
+- **דרך ב':** לשלוח שאילתת `SELECT COUNT(*)` ישירות ל-SQLite.
+איזו דרך תצרוך פחות סוללה וזיכרון במכשיר נייד, ומדוע?
+
+### 🧠 שאלות הבנה מעמיקות עם רמזים
+1. **מה ההבדל המעשי בין `QueryAsync<T>` לבין `ExecuteScalarAsync<T>`?**
+   > [!TIP]
+   > **רמז לחשיבה:** חשבו על הערך המוחזר — האם מדובר באוסף של שורות שלמות (`List<T>`) או בערך סקלרי בודד (כמו מספר שלם יחיד)?
+2. **מדוע חיוני להשתמש בפונקציה `COALESCE(SUM(...), 0)` כשמחשבים זמן כולל?**
+   > [!TIP]
+   > **רמז לחשיבה:** מה מחזירה שאילתת `SUM` כאשר הטבלה ריקה לגמרי ואין בה אף שורה?
+3. **מה היה קורה למבנה הטבלה במסד הנתונים אילו שכחנו להוסיף `[Ignore]` מעל התכונה `FormattedDuration`?**
+   > [!TIP]
+   > **רמז לחשיבה:** `sqlite-net-pcl` מנסה להפוך כל `public property` לעמודה ב-SQL. האם ניתן לשמור `string` מחושב בטבלה ללא שדה תואם?
 
 ---
 
@@ -669,6 +752,35 @@ public string SearchQuery
 1. מה תפקידה של ההוראה `ESCAPE '/'` בתוך שאילתת `LIKE`?
 2. למה השתמשנו ב-`COLLATE NOCASE` במיון לפי שם הסרטון?
 3. כיצד השימוש בסימני שאלה `?` מגן על האפליקציה מפני מתקפות SQL Injection?
+
+---
+
+# נספח א' — סדרת מדריכי ממשק משתמש בשיטת הבלוקים המודולרית
+
+חלק זה מרכז את מדריכי הממשק המודולריים של האפליקציה. כל מדריך כולל דיאגרמת בלוקים חזותית, צילומי מסך ממוקדים של כל בלוק, פירוק לגריד ולרכיבי XAML עצמאיים, טיפים מעמיקים לעיצוב פרימיום ב-.NET MAUI, וחיבור מלא ל-MVVM.
+
+### 📚 אינדקס המדריכים:
+- [ספריית מדריכי הממשק והעקרונות](Guides/README.md)
+- 🎬 **[מדריך פיתוח MainPage — מרכז למידה ומעקב YouTube](Guides/MainPage-Guide.md)**:
+  - פירוק מודולרי ל-5 בלוקים חזותיים (ניהול פלייליסט, אגרגציות SQLite, טופס הוספה, סרגל סינון ומיון, ורשימת CollectionView).
+  - טכניקות מפתח: `DataTrigger`, `RelativeSource AncestorType`, `AppThemeBinding`, ופקודות `ICommand.CanExecute`.
+- *מדריכי מסכים נוספים יתווספו כאן במקביל להרחבת הפרויקט.*
+
+---
+
+# נספח ב' — מקורות השראה, תיעוד וביבליוגרפיה
+
+<div style="font-size: 10pt; color: #475569; line-height: 1.7; background: #f8fafc; padding: 18px 24px; border-radius: 12px; border: 1px solid #e2e8f0;">
+ספר למידה זה ומדריכי הממשק שבו פותחו בהשראת מתודולוגיית ההוראה המודולרית <strong>The Block Strategy</strong> של <strong>Leomaris Reyes</strong> (Microsoft MVP, בלוגרית Telerik ויוצרת AskXammy.com), המנגישה עיצובי ממשק מובייל מורכבים ב-.NET MAUI בצורה הדרגתית ומובנית.
+
+<strong>תיעוד רשמי ומקורות להעמקה:</strong>
+<ul style="margin-top: 8px; padding-right: 22px;">
+  <li><strong>Microsoft Learn (.NET MAUI):</strong> תיעוד רשמי של ארכיטקטורת האפליקציה, מחזור החיים ובקרי הממשק (<a href="https://learn.microsoft.com/dotnet/maui/">learn.microsoft.com/dotnet/maui</a>).</li>
+  <li><strong>Data Binding & MVVM:</strong> דפוסי חיבור נתונים, פקודות ICommand ו-Compiled Bindings (<a href="https://learn.microsoft.com/dotnet/maui/fundamentals/data-binding/">learn.microsoft.com/dotnet/maui/fundamentals/data-binding</a>).</li>
+  <li><strong>SQLite-net-pcl & SQLitePCLRaw:</strong> אחסון מקומי מוצפן, אינדקסים, קשרים טבלאיים ושאילתות מהירות במובייל.</li>
+  <li><strong>xUnit Testing Framework:</strong> בדיקות יחידה לתשתיות נתונים ומודלי תצוגה בתבנית Standard AAA.</li>
+</ul>
+</div>
 
 
 

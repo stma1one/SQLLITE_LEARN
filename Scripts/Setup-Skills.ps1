@@ -2,7 +2,8 @@ param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 
 $skills = @(
-    "maui-k12-baton-workflow"
+    "maui-k12-baton-workflow",
+    "maui-step-guide-author"
 )
 
 foreach ($skill in $skills) {
@@ -11,6 +12,9 @@ foreach ($skill in $skills) {
 }
 
 New-Item -ItemType Directory -Path (Join-Path $Root "Learning") -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $Root "Learning\Guides") -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $Root "Learning\Mockups") -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $Root "Learning\Images") -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $Root ".agents") -Force | Out-Null
 
 $configPath = Join-Path $Root ".agents\MAUI-Agent-Mode.json"
@@ -62,5 +66,29 @@ This is the student's append-only learning book.
 '@ | Set-Content $learningBook -Encoding UTF8
 }
 
-Write-Host "MAUI K12 skill structure and learning state are ready." -ForegroundColor Green
+# Sync skill packages to .agents/skills/
+$packagesRoot = Join-Path $Root "SkillPackages"
+if (Test-Path $packagesRoot) {
+    foreach ($skill in $skills) {
+        $srcDir = Join-Path $packagesRoot "$skill\skills\$skill"
+        $destDir = Join-Path $Root ".agents\skills\$skill"
+        if (Test-Path $srcDir) {
+            Copy-Item -Path "$srcDir\*" -Destination $destDir -Recurse -Force
+        }
+    }
+}
+
+# Deploy PDF generator and screenshot scripts to project Scripts/ folder
+$targetScriptsDir = Join-Path $Root "Scripts"
+New-Item -ItemType Directory -Path $targetScriptsDir -Force | Out-Null
+
+$skillScriptsDir = Join-Path $Root ".agents\skills\maui-step-guide-author\scripts"
+if (Test-Path $skillScriptsDir) {
+    $pdfGenScript = Join-Path $skillScriptsDir "generate_book_pdf.py"
+    if (Test-Path $pdfGenScript) {
+        Copy-Item -Path $pdfGenScript -Destination (Join-Path $targetScriptsDir "Generate-Learning-Book-Pdf.py") -Force
+    }
+}
+
+Write-Host "MAUI K12 skill structure, PDF scripts, and learning state are ready." -ForegroundColor Green
 Write-Host "Default mode: MAXIMIZE STUDENT CAPABILITY" -ForegroundColor Cyan

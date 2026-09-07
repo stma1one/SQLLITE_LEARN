@@ -3,13 +3,19 @@ set -euo pipefail
 
 ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
-SKILLS=("maui-k12-baton-workflow")
+SKILLS=(
+    "maui-k12-baton-workflow"
+    "maui-step-guide-author"
+)
 
 for skill in "${SKILLS[@]}"; do
     mkdir -p "$ROOT/.agents/skills/$skill"
 done
 
 mkdir -p "$ROOT/Learning"
+mkdir -p "$ROOT/Learning/Guides"
+mkdir -p "$ROOT/Learning/Mockups"
+mkdir -p "$ROOT/Learning/Images"
 mkdir -p "$ROOT/.agents"
 
 CONFIG_PATH="$ROOT/.agents/MAUI-Agent-Mode.json"

@@ -11,7 +11,7 @@ public class MainViewModelTests : IDisposable
 
     public MainViewModelTests()
     {
-        SQLitePCL.Batteries_V2.Init();
+ //       SQLitePCL.Batteries_V2.Init();
         _testDbPath = Path.Combine(Path.GetTempPath(), $"ViewModelTestDb_{Guid.NewGuid():N}.db3");
         _databaseService = new SQLiteDatabaseService(_testDbPath);
     }

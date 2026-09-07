@@ -37,7 +37,7 @@ public class SQLiteDatabaseService : IDatabaseService
             return;
 
         // אתחול ספקי SQLite הנייטיביים
-        
+        // SQLitePCL.Batte
 
         // יצירת החיבור האסינכרוני עם הנתיב והדגלים המוגדרים
         _connection = new SQLiteAsyncConnection(_databasePath, _flags);

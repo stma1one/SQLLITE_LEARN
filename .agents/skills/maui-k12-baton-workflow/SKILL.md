@@ -253,6 +253,13 @@ Rules:
   - key classes, methods, properties, and attributes line-by-line
   - data flow and communication between layers (e.g. View -> ViewModel -> Service -> Model)
 - Update and enrich `Learning/MAUI-Learning-Book.md` with structured explanations, code snippets, and rationale in Hebrew (with English identifiers).
+- For UI screens, complex layouts, or screen slices, trigger the `maui-step-guide-author` skill workflow:
+  - Follow the Leomaris Reyes "Block Strategy" (The Block Strategy): deconstruct the screen into modular visual and MVVM blocks.
+  - Produce a dedicated screen guide at `Learning/Guides/<ScreenName>-Guide.md`.
+  - Create a mobile HTML mockup at `Learning/Mockups/<ScreenName>.html` and capture/render the visual block breakdown at `Learning/Images/<ScreenName>-overview.png`.
+  - Provide Deep-Dive callouts (`[!TIP]`) for visual styling techniques (negative margins for floating cards, gradients, borders, shadows).
+  - Walk through MVVM data bindings, state, and `ICommand` wiring (ensuring K-12 rules: explicit setters before `ref`, `CanExecute`, no `Page.IsBusy`).
+  - Index the new guide into `Learning/MAUI-Learning-Book.md`.
 - Ask 1-2 reflection or check questions to ensure the student thoroughly understands the code before proceeding.
 
 End with:
