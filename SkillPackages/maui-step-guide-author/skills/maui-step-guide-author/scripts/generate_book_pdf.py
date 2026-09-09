@@ -564,9 +564,9 @@ def main():
     else:
         combined_md = f"# יומן למידה — {project_info['app_name']}\n\n"
 
-    # Auto-discover all guides in Learning/Guides/
+    # Auto-discover all guides in Learning/Guides/ (excluding README index)
     if guides_dir.exists():
-        guide_files = sorted(list(guides_dir.glob("*.md")))
+        guide_files = [p for p in sorted(list(guides_dir.glob("*.md"))) if p.name.lower() != "readme.md"]
         for guide_path in guide_files:
             print(f"Discovered guide: {guide_path.name}")
             with open(guide_path, "r", encoding="utf-8") as f:
